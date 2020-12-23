@@ -15,17 +15,17 @@ using Random = UnityEngine.Random;
 public class Game : PersistableObject
 {
 	public PersistentStorage Storage;
-	public PersistableObject Prefab;
 	public KeyCode CreateKey = KeyCode.C;
 	public KeyCode NewGameKey = KeyCode.N;
 	public KeyCode SaveKey = KeyCode.S;
 	public KeyCode LoadKey = KeyCode.L;
 
-	private List<PersistableObject> _objects;
+	public ShapeFactory ShapeFactory;
+	private List<Shape> _shapes;
 
 	private void Awake()
 	{
-		_objects = new List<PersistableObject>();
+		_shapes = new List<Shape>();
 	}
 
 	private void Update()
@@ -54,10 +54,12 @@ public class Game : PersistableObject
 
 	public override void Save(GameDataWriter writer)
 	{
-		writer.Write(_objects.Count);
-		for (int i = 0; i < _objects.Count; i++)
+		writer.Write(_shapes.Count);
+		for (int i = 0; i < _shapes.Count; i++)
 		{
-			_objects[i].Save(writer);
+			writer.Write(_shapes[i].ShapeId);
+			writer.Write(_shapes[i].MaterialId);
+			_shapes[i].Save(writer);
 		}
 	}
 
@@ -66,29 +68,36 @@ public class Game : PersistableObject
 		var count = reader.ReadInt();
 		for (int i = 0; i < count; i++)
 		{
-			PersistableObject o = Instantiate(Prefab);
+			var shapeId = reader.ReadInt();
+			var materialId = reader.ReadInt();
+			Shape o = ShapeFactory.Get(shapeId, materialId);
 			o.Load(reader);
-			_objects.Add(o);
+			_shapes.Add(o);
 		}
 	}
 
 	private void CreateObject()
 	{
-		var o = Instantiate(Prefab);
+		var o = ShapeFactory.GetRandom();
 		var t = o.transform;
 		t.localPosition = Random.insideUnitSphere * 5f;
 		t.localRotation = Random.rotation;
 		t.localScale = Vector3.one * Random.Range(0.1f, 1f);
-		_objects.Add(o);
+		o.SetColor(Random.ColorHSV(
+			0, 1,
+			0.5f, 1,
+			0.25f, 1,
+			1, 1));
+		_shapes.Add(o);
 	}
 
 	private void BeginNewGame()
 	{
-		for (int i = 0; i < _objects.Count; i++)
+		for (int i = 0; i < _shapes.Count; i++)
 		{
-			Destroy(_objects[i].gameObject);
+			Destroy(_shapes[i].gameObject);
 		}
 
-		_objects.Clear();
+		_shapes.Clear();
 	}
 }

@@ -45,4 +45,14 @@ public class GameDataReader
 		value.z = _reader.ReadSingle();
 		return value;
 	}
+
+	public Color ReadColor()
+	{
+		Color value;
+		value.r = _reader.ReadSingle();
+		value.g = _reader.ReadSingle();
+		value.b = _reader.ReadSingle();
+		value.a = _reader.ReadSingle();
+		return value;
+	}
 }
